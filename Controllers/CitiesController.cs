@@ -45,13 +45,10 @@ namespace CityWebApiNotDecoupled.Controllers
             }
 
             List<CityDTO> CityDTOList = new List<CityDTO>();
-            //return await _context.Cities.ToListAsync();
-            //return await _context.Cities.Include(c => c.Country).Select(c => ItemToCity(c)).ToListAsync();
-
-            //return CityList.Select(c => ItemToCity(c, IncludeRelations)).ToList();
+            
             if (false ==  UseMapster)
             {
-                CityDTOList = CityList.Select(c => ItemToCity(c, IncludeRelations)).ToList();
+                CityDTOList = CityList.Select(c => CityToCityDTO(c, IncludeRelations)).ToList();
             }
             else
             {
@@ -85,13 +82,10 @@ namespace CityWebApiNotDecoupled.Controllers
             }
 
             List<CityDTO> CityDTOList = new List<CityDTO>();
-            //return await _context.Cities.ToListAsync();
-            //return await _context.Cities.Include(c => c.Country).Select(c => ItemToCity(c)).ToListAsync();
-
-            //return CityList.Select(c => ItemToCity(c, IncludeRelations)).ToList();
+           
             if (false == UseMapster)
             {
-                CityDTOList = CityList.Select(c => ItemToCity(c, IncludeRelations)).ToList();
+                CityDTOList = CityList.Select(c => CityToCityDTO(c, IncludeRelations)).ToList();
             }
             else
             {
@@ -103,20 +97,24 @@ namespace CityWebApiNotDecoupled.Controllers
 
         // GET: api/Cities/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<City>> GetCity(int id)
+        public async Task<ActionResult<CityDTO>> GetCity(int id)
         {
           if (_context.Cities == null)
           {
               return NotFound();
           }
-            var city = await _context.Cities.FindAsync(id);
-
+            //var city = await _context.Cities.FindAsync(id);
+            var city = await _context.Cities.Include(c => c.Country).FirstOrDefaultAsync(c => c.CityId == id);
+            
             if (city == null)
             {
                 return NotFound();
             }
 
-            return city;
+            CityDTO CityDTO_Object = city.Adapt<CityDTO>();
+
+            //return city;
+            return CityDTO_Object;
         }
 
         // PUT: api/Cities/5
@@ -195,7 +193,7 @@ namespace CityWebApiNotDecoupled.Controllers
             return (_context.Cities?.Any(e => e.CityId == id)).GetValueOrDefault();
         }
 
-        private static CityDTO ItemToCity(City city, bool IncludeRelations = true)
+        private static CityDTO CityToCityDTO(City city, bool IncludeRelations = true)
         {
             CityDTO CityDTO_Object = new CityDTO();
 
