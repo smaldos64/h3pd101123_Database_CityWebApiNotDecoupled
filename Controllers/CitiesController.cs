@@ -56,34 +56,14 @@ namespace CityWebApiNotDecoupled.Controllers
             
             if (false ==  UseMapster)
             {
-                // Hvis ikke vi bruger Mapster, så skal vi manuelt lave/have en 
-                // metode, der konverterer om fra vores City klasse til vores 
-                // CityDTO klasse. I tilfældet her bruger vi metoden CityToCityDTO til
-                // at stå for denne konvertering. Denne metode er i bunden af vores fil her.
-                // Hvis vi vælger ikke at bruge Mapster til vores data konvertering, skal vi
-                // have 2 metoder i alle vores controllers, der i princippet gør det samme.
-                // Nemlig at:
-                // 1) Konvertere fra vores model klasse til vores DTO klasse
-                // 2) Konvertere fra vores DTO klasse til vores model klasse
-                // I tilfældet her med vores CitiesController har vi de 2 metoder:
-                // CityToCityDTO og CityDTOToCity
+                // Her bruger vi vores egen metode CityToCityDTO til at konvertere
+                // en liste af City objekter om til en liste af CityDTO objekter.
                 CityDTOList = CityList.Select(c => CityToCityDTO(c, IncludeRelations)).ToList();
             }
             else
             {
-                // Hvis vi vælger at bruge Mapster til at konvertere data mellem vores
-                // model klasse og vores DTO klasse, så bliver det hele meget meget lettere.
-                // Så kan vi altid bruge Mapster til at konvertere:
-                // 1) Data fra vores model klasse til vores DTO klasse
-                // 2) Data fra vores DTO klasse til vores model klasse
-                // Syntaksen for at bruge Mapster er (i forhold til eksemplet lige herunder):
-                // Vi starter med vores liste af objekter af vores City model klasse. I eksemplet
-                // herunder er CityList en liste af objekter af vores City klasse. CityDTO angiver
-                // den (DTO) klasse, som vores City objekter (CityList) skal konverteres til.
-                // Så i praksis sker der dette i linjen herunder. Ved brug af Mapster bliver
-                // vores liste af City objekter (CityList) konverteret til et array af CityDTO
-                // objekter. Efterfølgende bliver dette array af CityDTO objekter konverteret til en
-                // liste af CityDTO objekter ved brug af kommandoen .ToList()
+                // Her bruger vi Mapster til at konvertere en liste af City objekter
+                // om til en liste af CityDTO objekter.
                 CityDTOList = CityList.Adapt<CityDTO[]>().ToList();
             }
             
@@ -117,10 +97,14 @@ namespace CityWebApiNotDecoupled.Controllers
            
             if (false == UseMapster)
             {
+                // Her bruger vi vores egen metode CityToCityDTO til at konvertere
+                // en liste af City objekter om til en liste af CityDTO objekter.
                 CityDTOList = CityList.Select(c => CityToCityDTO(c, IncludeRelations)).ToList();
             }
             else
             {
+                // Her bruger vi Mapster til at konvertere en liste af City objekter
+                // om til en liste af CityDTO objekter.
                 CityDTOList = CityList.Adapt<CityDTO[]>().ToList();
             }
 
@@ -128,33 +112,35 @@ namespace CityWebApiNotDecoupled.Controllers
         }
 
         // GET: api/Cities/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<CityDTO>> GetCity(int CityId)
+        [HttpGet("{CityId}")]
+        public async Task<ActionResult<CityDTO>> GetCity(int CityId,
+                                                         bool UseMapster = true)
         {
           if (_context.Cities == null)
           {
               return NotFound();
           }
             City City_Object = await _context.Cities.Include(c => c.Country).FirstOrDefaultAsync(c => c.CityId == CityId);
-            
+
+            CityDTO CityDTO_Object = new CityDTO();
+
             if (City_Object == null)
             {
                 return NotFound();
             }
 
-            // Hvis vi vælger at bruge Mapster til at konvertere data mellem vores
-            // model klasse og vores DTO klasse, så bliver det hele meget meget lettere.
-            // Så kan vi altid bruge Mapster til at konvertere:
-            // 1) Data fra vores model klasse til vores DTO klasse
-            // 2) Data fra vores DTO klasse til vores model klasse
-            // Syntaksen for at bruge Mapster er (i forhold til eksemplet lige herunder):
-            // Vi starter med vores objekt af vores City model klasse. I eksemplet
-            // herunder er City_Object et objekt af vores City klasse. CityDTO angiver
-            // den (DTO) klasse, som vores City objekt (City_Object) skal konverteres til.
-            // Så i praksis sker der dette i linjen herunder. Ved brug af Mapster bliver
-            // vores City objekt (City_Object) konverteret til et objekt af CityDTO
-            // klassen. 
-            CityDTO CityDTO_Object = City_Object.Adapt<CityDTO>();
+            if (false == UseMapster)
+            {
+                // Her bruger vi vores egen metode CityToCityDTO til at konvertere
+                // et City objekt om til et CityDTO objekt.
+                CityDTO_Object = CityToCityDTO(City_Object);
+            }
+            else
+            {
+                // Her bruger vi Mapster til at konvertere et City objekt
+                // om til et CityDTO objekt.
+                CityDTO_Object = City_Object.Adapt<CityDTO>();
+            }
 
             return CityDTO_Object;
         }
@@ -175,10 +161,14 @@ namespace CityWebApiNotDecoupled.Controllers
             
             if (UseMapster)
             {
+                // Vi bruger Mapster her til at konvertere et CityForUpdateDTO
+                // Objekt om til til City Objekt
                 City_Object = CityForUpdateDTO_Object.Adapt<City>();
             }
             else
             {
+                // Vi bruger her vores egen metode CityForUpdateDTOToCity for
+                // at konvertere et CityForUpdateDTO Objekt om til til City Objekt
                 City_Object = CityForUpdateDTOToCity(CityForUpdateDTO_Object);
             }
 
@@ -218,10 +208,14 @@ namespace CityWebApiNotDecoupled.Controllers
 
             if (UseMapster)
             {
+                // Vi bruger Mapster her til at konvertere et CityForSaveDTO Objekt
+                // om til til City Objekt
                 City_Object = CityForSaveDTO_Object.Adapt<City>();
             }
             else
             {
+                // Vi bruger her vores egen metode CityForSaveDTOToCity for
+                // at konvertere et CityForSaveDTO Objekt om til til City Objekt
                 City_Object = CityForSaveDTOToCity(CityForSaveDTO_Object);
             }
 
@@ -232,6 +226,9 @@ namespace CityWebApiNotDecoupled.Controllers
             return CreatedAtAction("GetCity", new { id = City_Object.CityId }, City_Object);
         }
 
+        // Når vi skal lave en Delete, behøver vi ikke bruge DTO klasser. 
+        // For i tilfælde af Delete skal vi "bare" slette en record i 
+        // vores Database med et givet ID
         // DELETE: api/Cities/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCity(int CityId)
@@ -257,6 +254,8 @@ namespace CityWebApiNotDecoupled.Controllers
             return (_context.Cities?.Any(e => e.CityId == CityId)).GetValueOrDefault();
         }
 
+        // Metoden herunder konverter data fra et City objekt
+        // til et CityDTO objekt.
         private static CityDTO CityToCityDTO(City City_Object, bool IncludeRelations = true)
         {
             CityDTO CityDTO_Object = new CityDTO();
@@ -277,6 +276,8 @@ namespace CityWebApiNotDecoupled.Controllers
             return CityDTO_Object;
         }
 
+        // Metoden herunder konverter data fra et CityForUpdateDTO objekt
+        // til et City objekt.
         private static City CityForUpdateDTOToCity(CityForUpdateDTO CityForUpdateDTO_Object)
         {
             City City_Object = new City();
@@ -289,6 +290,8 @@ namespace CityWebApiNotDecoupled.Controllers
             return City_Object;
         }
 
+        // Metoden herunder konverter data fra et CityForSaveDTO objekt
+        // til et City objekt.
         private static City CityForSaveDTOToCity(CityForSaveDTO CityForSaveDTO_Object)
         {
             City City_Object = new City();
